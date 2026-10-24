@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="be">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Правер ШІ: Верыфікатар тэкстаў</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --success-color: #4caf50;
+            --error-color: #f44336;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 17px;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .hero {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            border-radius: 0 0 2rem 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 1rem; }
+        .hero p { font-size: clamp(1rem, 2.5vw, 1.2rem); max-width: 800px; margin: 0 auto; opacity: 0.95; }
+
+        .toc-container {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(10px);
+            padding: 1rem 1.5rem;
+            margin: 0 1rem 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .toc-container h2 { font-size: 1.2rem; margin-bottom: 0.8rem; color: #4a5568; }
+
+        .toc-list {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+        }
+
+        .toc-list li a {
+            text-decoration: none;
+            color: #2b6cb0;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.4rem 0.8rem;
+            background: #ebf8ff;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .toc-list li a:hover { background: #2b6cb0; color: white; transform: translateY(-2px); }
+
+        .section {
+            max-width: 900px;
+            margin: 0 auto 3rem;
+            padding: 0 1.5rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            color: #2d3748;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .section-intro { margin-bottom: 1.5rem; color: #4a5568; font-style: italic; }
+
+        .task-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            border-left: 5px solid #667eea;
+        }
+
+        .task-type-badge {
+            display: inline-block;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            margin-bottom: 0.8rem;
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .task-question { font-weight: 600; margin-bottom: 1rem; font-size: 1.1rem; }
+
+        .task-original {
+            background: #fff5f5;
+            border: 1px dashed var(--error-color);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-family: monospace;
+            color: #c53030;
+        }
+
+        .task-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .task-input:focus { outline: none; border-color: #667eea; }
+
+        .options-group { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.8rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .option-label:hover { background: #edf2f7; }
+
+        .btn-group { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem; }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-check { background: #4299e1; color: white; }
+        .btn-check:hover { background: #3182ce; }
+        .btn-reset { background: #a0aec0; color: white; }
+        .btn-reset:hover { background: #718096; }
+        .btn-show { background: #ed8936; color: white; }
+        .btn-show:hover { background: #dd6b20; }
+
+        .btn-up, .btn-down { background: #cbd5e0; color: #2d3748; padding: 0.4rem 0.8rem; }
+
+        .feedback { margin-top: 1rem; padding: 1rem; border-radius: 8px; display: none; }
+        .feedback.correct { background: #f0fff4; border: 1px solid var(--success-color); color: #22543d; display: block; }
+        .feedback.incorrect { background: #fff5f5; border: 1px solid var(--error-color); color: #742a2a; display: block; }
+
+        .rule-link { display: inline-block; margin-top: 0.5rem; font-size: 0.9rem; color: #2b6cb0; font-weight: 600; }
+
+        .sortable-list { list-style: none; margin-bottom: 1rem; }
+        .sortable-item {
+            background: #edf2f7;
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-to-top {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background: var(--secondary-gradient);
+            color: white !important;
+            text-align: center;
+            text-decoration: none !important;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 114, 255, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 114, 255, 0.4);
+        }
+
+        .floating-toc {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary-gradient);
+            color: white !important;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            text-decoration: none !important;
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.4);
+            z-index: 999;
+            transition: transform 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .floating-toc:hover { transform: scale(1.1); }
+
+        .admin-panel {
+            background: #2d3748;
+            color: white;
+            padding: 2rem;
+            border-radius: var(--radius);
+            margin-top: 3rem;
+        }
+
+        .admin-login { text-align: center; padding: 2rem; }
+        .admin-login input { padding: 0.8rem; border-radius: 8px; border: none; width: 250px; margin-right: 0.5rem; }
+
+        .admin-interface { display: none; }
+
+        .admin-form { background: #4a5568; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; }
+        .admin-form label { display: block; margin-bottom: 0.4rem; font-size: 0.9rem; color: #cbd5e0; }
+        .admin-form input, .admin-form select, .admin-form textarea {
+            width: 100%;
+            padding: 0.7rem;
+            border-radius: 6px;
+            border: 1px solid #718096;
+            background: #2d3748;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .admin-task-list { max-height: 400px; overflow-y: auto; }
+        .admin-task-item {
+            background: #4a5568;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-task-info { flex: 1; font-size: 0.9rem; }
+        .admin-actions { display: flex; gap: 0.5rem; }
+
+        .btn-admin { padding: 0.4rem 0.8rem; border: none; border-radius: 6px; cursor: pointer; }
+        .btn-edit { background: #ecc94b; color: #744210; }
+        .btn-delete { background: #f56565; color: white; }
+        .btn-export { background: #48bb78; color: white; margin-right: 0.5rem; }
+        .btn-import { background: #4299e1; color: white; }
+
+        .hidden { display: none !important; }
+
+        /* Падсветка рэдагаванага задання */
+        .admin-task-item.editing {
+            border-left: 4px solid #ecc94b;
+            background: #553c9a;
+        }
+
+        @media (max-width: 768px) {
+            .toc-list { flex-direction: column; }
+            .btn-group { flex-direction: column; }
+            .btn { width: 100%; }
+            .floating-toc { bottom: 1rem; right: 1rem; width: 50px; height: 50px; font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    
+
+<header class="hero">
+  <img src="header-image.png" alt="Правер ШІ" class="hero-image">
+</header>
+
+    <nav class="toc-container" id="toc">
+        <h2>📚 Змест</h2>
+        <ul class="toc-list">
+            <li><a href="#section-orthography">1. Арфаграфія</a></li>
+            <li><a href="#section-morphology">2. Марфалогія</a></li>
+            <li><a href="#section-syntax">3. Сінтаксіс і пунктуацыя</a></li>
+            <li><a href="#section-lexics">4. Лексіка</a></li>
+            <li><a href="#section-phonetics">5. Фанетыка</a></li>
+            <li><a href="#section-phraseology">6. Фразеалогія</a></li>
+            <li><a href="#section-morphemics">7. Марфеміка</a></li>
+            <li><a href="#section-word-formation">8. Словаўтварэнне</a></li>
+            <li><a href="#section-stylistics">9. Стылістыка і пераклад</a></li>
+            <li><a href="#section-mixed">10. Змешаны верыфікатар</a></li>
+            <li><a href="#section-admin">⚙️ Панэль адміністратара</a></li>
+        </ul>
+    </nav>
+
+    <main id="main-content"></main>
+
+    <a href="#top" class="floating-toc" onclick="scrollToTop(event)" title="Вярнуцца ў самы верх">📚</a>
+
+    <script>
+        /* ===== 1. КАНСТАНТЫ І СТАН ===== */
+        const ADMIN_PASSWORD = "angelina";
+        const STORAGE_KEY = "praver_shi_tasks";
+        
+        // Стан адміністратара (каб захоўваць яго пры перастройцы інтэрфейсу)
+        let adminState = {
+            isLoggedIn: false,
+            editingTaskId: null
+        };
+
+        /* ===== 2. БАЗА ЗАДАННЯЎ ПА ЗМАЎЧАННІ ===== */
+        const DEFAULT_TASKS = [
+            { id: 1, type: "fill-gap", section: "lexics", question: "Упішыце правільны варыянт словазлучэння-калькі з рускай мовы):", original: "На сённяшні дзень мы вывучаем новую тэму.", answer: "Сёння", explanation: "Выраз 'на сённяшні дзень' з'яўляецца калькай з рускай мовы. Правільна выкарыстоўваць прыслоўе 'сёння'.", rule: "Закон РБ № 420-З, § 4", difficulty: "Нізкая" },
+            { id: 2, type: "single-choice", section: "orthography", question: "Абярыце правільны варыянт напісання прыназоўніка з займеннікам:", original: "(У/Ува/Ва) ўніверсітэце адбылася сустрэча.", options: ["У ўніверсітэце", "Ува ўніверсітэце", "Ва ўніверсітэце"], answer: "Ва ўніверсітэце", explanation: "Прыназоўнік 'у' прымае форму 'ва' перад словамі, якія пачынаюцца са спалучэння гукаў, першая з якіх 'у' (ў).", rule: "Закон РБ № 420-З, § 21", difficulty: "Сярэдняя" },
+            { id: 3, type: "true-false", section: "orthography", question: "Ці з'яўляецца напісанне 'дзверы' правільным згодна з правілам дзекання?", original: "Дзверы былі шырока адчынены.", answer: "Верна", explanation: "Гукі [д] і [т] перад мяккімі зычнымі пішуцца як дз і ц (дзеканне і цеканне).", rule: "Закон РБ № 420-З, § 12", difficulty: "Нізкая" },
+            { id: 4, type: "find-fix", section: "orthography", question: "Знайдзіце і выпраўце памылку ва ўжыванні ў нескладовага:", original: "Алесь пайшоў ў лес па грыбы.", answer: "у лес", explanation: "Пасля зычных пішацца 'у', а не 'ў'. 'Ў' пішацца толькі пасля галосных.", rule: "Закон РБ № 420-З, § 15", difficulty: "Нізкая" },
+            { id: 5, type: "matching", section: "orthography", question: "Суаднясіце словы з правільным напісаннем галоснай:", items: [{ left: "К...фір", right: "е" }, { left: "Кал...ндар", right: "я" }], answer: "Кефір, каляндар", explanation: "У першым складзе перад націскам е пераходзіць у я. Е захоўваецца пасля г, к, х.", rule: "Закон РБ № 420-З, § 2", difficulty: "Сярэдняя" },
+            { id: 6, type: "single-choice", section: "morphology", question: "Абярыце правільную форму роднага склону множнага ліку назоўніка 'панчоха':", original: "У краме не было жаночых ...", options: ["панчохаў", "панчох", "панчохі"], answer: "панчох", explanation: "Назоўнікі жаночага роду з асновай на цвёрды зычны ў родным склоне множнага ліку маюць нулявы канчатак.", rule: "Закон РБ № 420-З, § 23", difficulty: "Сярэдняя" },
+            { id: 7, type: "fill-gap", section: "morphology", question: "Упішыце правільную форму займенніка ў давальным склоне:", original: "Я падзякаваў (ён) за дапамогу.", answer: "яму", explanation: "Займеннік 'ён' у давальным склоне адзіночнага ліку мужчынскага роду мае форму 'яму'.", rule: "Закон РБ № 420-З, § 18", difficulty: "Нізкая" },
+            { id: 8, type: "classify", section: "morphology", question: "Да якога разраду адносяцца лічэбнікі 'двое', 'трое', 'абодва'?", original: "Двое хлопцаў пайшлі ў лес.", options: ["Колькасныя", "Парадкавыя", "Зборныя", "Дробавыя"], answer: "Зборныя", explanation: "Зборныя лічэбнікі абазначаюць колькасць як адзінае цэлае.", rule: "Закон РБ № 420-З, § 37", difficulty: "Сярэдняя" },
+            { id: 9, type: "true-false", section: "morphology", question: "Ці з'яўляецца слова 'дзякуй' у сказе 'Дзякуй за дапамогу' дзеясловам?", original: "Дзякуй за дапамогу.", answer: "Няверна", explanation: "У дадзеным кантэксце 'дзякуй' выконвае ролю этыкетнага выклічніка.", rule: "Закон РБ № 420-З, § 39", difficulty: "Высокая" },
+            { id: 10, type: "ordering", section: "morphology", question: "Расстаўце марфалагічныя прыметы дзеяслова 'чытаем' у парадку марфалагічнага разбору:", items: [{ text: "Дзеяслоў" }, { text: "Пачатковая форма: чытаць" }, { text: "Цяперашні час, 1-я асоба, множны лік" }, { text: "Выказнік" }], answer: "Дзеяслоў, Пачатковая форма: чытаць, Цяперашні час, 1-я асоба, множны лік, Выказнік", explanation: "Стандартны парадак марфалагічнага разбору дзеяслова.", rule: "Школьны даведнік па марфалогіі", difficulty: "Сярэдняя" },
+            { id: 11, type: "find-fix", section: "syntax", question: "Знайдзіце і выпраўце памылку ў кіраванні:", original: "Я аплаціў за праезд у аўтобусе.", answer: "аплаціў праезд", explanation: "Дзеяслоў 'аплаціць' патрабуе вінавальнага склону без прыназоўніка.", rule: "Закон РБ № 420-З, § 56", difficulty: "Сярэдняя" },
+            { id: 12, type: "single-choice", section: "syntax", question: "Дзе трэба паставіць коску ў сказе з дзеепрыслоўным зваротам?", original: "Чытаючы кнігу ён забыўся пра час.", options: ["Чытаючы кнігу, ён забыўся пра час.", "Чытаючы кнігу ён, забыўся пра час.", "Коска не патрэбна."], answer: "Чытаючы кнігу, ён забыўся пра час.", explanation: "Дзеепрыслоўны зварот заўсёды выдзяляецца коскамі.", rule: "Закон РБ № 420-З, § 50", difficulty: "Сярэдняя" },
+            { id: 13, type: "matching", section: "syntax", question: "Суаднясіце від складанага сказа з прыкладам:", items: [{ left: "Складаназлучаны", right: "Сонца грэе, і птушкі спяваюць." }, { left: "Складаназалежны", right: "Я ведаю, што прыйдзе вясна." }], answer: "Складаназлучаны - Сонца грэе, і птушкі спяваюць; Складаназалежны - Я ведаю, што прыйдзе вясна.", explanation: "Складаназлучаныя сказы злучаюцца злучнікамі і, а, але, затое і г.д.", rule: "Закон РБ № 420-З, § 58", difficulty: "Сярэдняя" },
+            { id: 14, type: "true-false", section: "syntax", question: "Ці з'яўляецца спалучэнне 'дзяўчына прыгожая' словазлучэннем?", answer: "Няверна", explanation: "Гэта сказ.", rule: "Закон РБ № 420-З, § 56", difficulty: "Сярэдняя" },
+            { id: 15, type: "fill-gap", section: "syntax", question: "Упішыце прапушчаны знак прыпынку:", original: "Лес шумеў__ і гэта быў прыгожы гук.", answer: ",", explanation: "Коска ставіцца перад злучнікам 'і', які злучае дзве граматычныя асновы.", rule: "Закон РБ № 420-З, § 56", difficulty: "Нізкая" },
+            { id: 16, type: "single-choice", section: "lexics", question: "Абярыце правільны беларускі адпаведнік да рускага слова 'убедительный':", original: "Ён прывёў ... аргументы.", options: ["убедзіцельныя", "пераканаўчыя", "настойлівыя"], answer: "пераканаўчыя", explanation: "Слова 'убедзіцельны' з'яўляецца калькай. Правільна — 'пераканаўчы'.", rule: "Беларуска-рускі слоўнік", difficulty: "Сярэдняя" },
+            { id: 17, type: "find-fix", section: "lexics", question: "Выпраўце лексічную памылку:", original: "Мы наведалі знакаміты адрас у Мінску.", answer: "месца", explanation: "Слова 'адрас' абазначае месцазнаходжанне. Правільна казаць 'месца'.", rule: "Слоўнік паронімаў", difficulty: "Высокая" },
+            { id: 18, type: "classify", section: "lexics", question: "Да якога пласта лексікі адносіцца слова 'чарнарызнік'?", original: "Чарнарызнік маліўся ў келлі.", options: ["Неалагізмы", "Устарэлыя словы", "Дыялектызмы", "Прафесіяналізмы"], answer: "Устарэлыя словы", explanation: "Чарнарызнік - манах. Устарэлыя словы абазначаюць прадметы і паняцці, якія або зніклі з ужытку (гістарызмы), або маюць зараз іншыя назвы (архаізмы)", rule: "Лексіка беларускай мовы паводле паходжання", difficulty: "Высокая" },
+            { id: 19, type: "true-false", section: "lexics", question: "Ці з'яўляюцца словы 'жнівеньскі' і 'жніўны' сінонімамі?", original: "Жнівеньскі дзень быў гарачым.", answer: "Няверна", explanation: "Гэта паронімы. 'Жніўны' — да жніва, 'жнівеньскі' — да месяца жніўня.", rule: "Слоўнік паронімаў", difficulty: "Высокая" },
+            { id: 20, type: "ordering", section: "lexics", question: "Расстаўце словы ў парадку ўзрастання інтэнсіўнасці дзеяння:", items: [{ text: "Шаптаць" }, { text: "Гаварыць" }, { text: "Крычаць" }], answer: "Шаптаць, Гаварыць, Крычаць", explanation: "Гэта семантычны шэраг сінонімаў з нарастальнай інтэнсіўнасцю.", rule: "Лексікалогія", difficulty: "Нізкая" },
+            { id: 21, type: "single-choice", section: "phonetics", question: "Якая фанетычная з'ява адбываецца ў слове 'сцямнела'?", original: "На вуліцы хутка сцямнела.", options: ["Аканне", "Яканне", "Дзеканне", "Цеканне", "Прыпадабненне шыпячага да свісцячага", "Прыпадабненне цвёрдага да мяккага"], answer: "Прыпадабненне цвёрдага да мяккага", explanation: "[с' ц' а м н' э л а]", rule: "Закон РБ № 420-З, § 4", difficulty: "Сярэдняя" },
+            { id: 22, type: "find-fix", section: "phonetics", question: "Вызначце і выпраўце памылку ў фанетычным разборы:", original: "Слова 'дождж' вымаўляецца як [дождж].", answer: "дошч", explanation: "У слове дождж спалучэнне 'ждж' вымаўляецца як [шч] на канцы слова.", rule: "Закон РБ № 420-З, § 13", difficulty: "Высокая" },
+            { id: 23, type: "true-false", section: "phonetics", question: "Ці з'яўляецца гук [ў] заўсёды зычным у беларускай мове?", original: "Воўк выў на месяц.", answer: "Верна", explanation: "Гук [ў] у беларускай мове з'яўляецца зычным (санорным).", rule: "Закон РБ № 420-З, § 15", difficulty: "Сярэдняя" },
+            { id: 24, type: "matching", section: "phonetics", question: "Суаднясіце фанетычную з'яву з прыкладам:", items: [{ left: "Дзеканне", right: "[дз'эц'і] (дзеці)" }, { left: "Асіміляцыя па звонкасці", right: "[проз'ба] (просьба)" }], answer: "Дзеканне - [дз'эц'і]; Асіміляцыя - [проз'ба]", explanation: "Дзеканне — вымаўленне мяккіх д і т як [дз'] і [ц'].", rule: "Закон РБ № 420-З, § 12, § 11", difficulty: "Сярэдняя" },
+            { id: 25, type: "fill-gap", section: "phonetics", question: "Колькі гукаў у слове 'згінаешся'?", original: "Ты згінаешся пад цяжарам.", answer: "9", explanation: "З-г'-і-н-а-й'-э-с'-а = 9 гукаў.", rule: "Фанетычны разбор", difficulty: "Высокая" },
+            { id: 26, type: "single-choice", section: "phraseology", question: "Што азначае фразеалагізм 'як мышы з'елі'?", original: "Мае грошы як мышы з'елі.", options: ["Вельмі хутка зніклі", "Хтосьці скраў", "З'елі сапраўдныя мышы"], answer: "Вельмі хутка зніклі", explanation: "Фразеалагізм абазначае бясследнае знікненне чагосьці.", rule: "Фразеалагічны слоўнік", difficulty: "Нізкая" },
+            { id: 27, type: "find-fix", section: "phraseology", question: "Выпраўце памылку ва ўжыванні фразеалагізма:", original: "Васіль любіць пераліваць з пустога ў парожняе.", answer: "ваду ў ступе таўчы", explanation: "Прамая калька з рускай. Правільна: 'ваду ў ступе таўчы'.", rule: "Фразеалагічны слоўнік", difficulty: "Сярэдняя" },
+            { id: 28, type: "matching", section: "phraseology", question: "Падбярыце беларускі адпаведнік да рускага фразеалагізма:", items: [{ left: "Обеими руками", right: "Аберуч" }, { left: "Одного поля ягоды", right: "Аднаго балота чэрці" }], answer: "Обеими руками - Аберуч; Одного поля ягоды - Аднаго балота чэрці", explanation: "Гэта ўстойлівыя выразы з уласнымі адпаведнікамі.", rule: "Слоўнік фразеалагізмаў", difficulty: "Сярэдняя" },
+            { id: 29, type: "true-false", section: "phraseology", question: "Ці пращда, што выраз 'хоць гаць гаці' з'яўляецца беларускім фразеалагізмам са значэннем 'вельмі многа'?", original: "Грыбоў у лесе — хоць гаць гаці!", answer: "Верна", explanation: "Гэта сапраўдны беларускі фразеалагізм са значэннем 'вельмі многа'", rule: "Фразеалагічны слоўнік", difficulty: "Сярэдняя" },
+            { id: 30, type: "ordering", section: "phraseology", question: "Аднавіце правільны парадак слоў у фразеалагізме:", items: [{ text: "на" }, { text: "макулінку" }, { text: "ні" }], answer: "ні на макулінку", explanation: "Устойлівы выраз, які азначае 'зусім нічога'.", rule: "Фразеалагічны слоўнік", difficulty: "Нізкая" },
+            { id: 31, type: "single-choice", section: "morphemics", question: "Які спосаб утварэння слова 'падбярозавік'?", original: "Мы знайшлі вялікі падбярозавік.", options: ["Прыставачна-суфіксальны", "Суфіксальны", "Складанне"], answer: "Прыставачна-суфіксальны", explanation: "Слова ўтворана з дапамогай прыстаўкі і суфікса.", rule: "Закон РБ № 420-З, § 95", difficulty: "Сярэдняя" },
+            { id: 32, type: "find-fix", section: "morphemics", question: "Знайдзіце памылку ў выдзяленні кораня:", original: "У слове 'вадзянік' корань '-вад-'.", answer: "-вадз-", explanation: "Корань у слове 'вадзянік' — '-вадз-'.", rule: "Марфемны слоўнік", difficulty: "Сярэдняя" },
+            { id: 33, type: "true-false", section: "morphemics", question: "Ці ўваходзіць канчатак у аснову слова?", original: "У слове 'сталы' аснова 'сталы'.", answer: "Няверна", explanation: "Аснова слова — гэта частка слова без канчатка.", rule: "Закон РБ № 420-З, § 93", difficulty: "Нізкая" },
+            { id: 34, type: "matching", section: "morphemics", question: "Суаднясіце марфему з яе функцыяй:", items: [{ left: "Суфікс", right: "Служыць для ўтварэння новых слоў і форм слова" }, { left: "Канчатак", right: "Служыць для змянення формы слова" }], answer: "Суфікс - Служыць для ўтварэння новых слоў і форм слова; Канчатак - Служыць для змянення формы слова", explanation: "Гэта асноўнае адрозненне паміж гэтымі марфемамі.", rule: "Марфеміка", difficulty: "Нізкая" },
+            { id: 35, type: "fill-gap", section: "morphemics", question: "Які суфікс выкарыстоўваецца для ўтварэння назваў асоб мужчынскага роду ад дзеясловаў?", original: "Наведваць -> Наведва...", answer: "льнік", explanation: "Суфікс '-льнік' утварае назоўнікі мужчынскага роду: наведвальнік, стваральнік.", rule: "Словаўтварэнне", difficulty: "Высокая" },
+            { id: 36, type: "single-choice", section: "word-formation", question: "Які тып складанага слова 'БДУ'?", original: "Марына паступіла ў БДУ.", options: ["Складанае са злучальнай галоснай", "Складанае без злучальнай галоснай", "Абрэвіятура"], answer: "Абрэвіятура", explanation: "Літарная абрэвіятура.", rule: "Закон РБ № 420-З, § 35", difficulty: "Сярэдняя" },
+            { id: 37, type: "find-fix", section: "word-formation", question: "Выпраўце памылку ў напісанні складанага прыметніка:", original: "Гэта быў навуковадаследчы інстытут.", answer: "навукова-даследчы", explanation: "Прыметнікі, якія абазначаюць аднародныя паняцці, пішуцца праз злучок.", rule: "Закон РБ № 420-З, § 36", difficulty: "Сярэдняя" },
+            { id: 38, type: "true-false", section: "word-formation", question: "Ці з'яўляецца слова 'кажух' вытворным?", original: "Міхал прыкрыўся кажухом.", answer: "Верна", explanation: "Гэта вытворнае слова (утварылася ад слова 'кожа').", rule: "Закон РБ № 420-З, § 20", difficulty: "Высокая" },
+            { id: 39, type: "matching", section: "word-formation", question: "Суаднясіце спосаб утварэння з прыкладам:", items: [{ left: "Бяссуфіксны", right: "Уцёкі (ад уцякаць)" }, { left: "Пераход з адной часткі мовы ў другую", right: "Сталовая (пакой)" }], answer: "Бяссуфіксны - Уцёкі; Пераход - Сталовая", explanation: "Бяссуфіксны спосаб (нулявая суфіксацыя) і субстантывацыя (пераход часціны мовы ў назоўнік).", rule: "Словаўтварэнне", difficulty: "Сярэдняя" },
+            { id: 40, type: "ordering", section: "word-formation", question: "Вызначце этапы ўтварэння слова 'дакладчыца':", items: [{ text: "Даклад" }, { text: "Дакладчык" }, { text: "Дакладчыца" } ], answer: "Даклад, Дакладчык, Дакладчыца", explanation: " ", rule: "Словаўтваральны разбор", difficulty: "Нізкая" },
+            { id: 41, type: "single-choice", section: "stylistics", question: "Які стыль маўлення выкарыстаны ў дадзеным тэксце?", original: "Паважаныя члены камісіі, прашу разгледзець маю заяву.", options: ["Мастацкі", "Афіцыйны", "Публіцыстычны"], answer: "Афіцыйны", explanation: "Наяўнасць звароту, стандартных фраз указвае на афіцыйны стыль.", rule: "Стылістыка", difficulty: "Нізкая" },
+            { id: 42, type: "find-fix", section: "stylistics", question: "Выпраўце памылку:", original: "На сустрэчы былі толькі маладыя юнакі.", answer: "На сустрэчы былі толькі юнакі", explanation: "У спалучэнні слоў 'маладыя юнакі' слова 'маладыя' з'яўляецца лішнім.", rule: "Стылістыка", difficulty: "Сярэдняя" },
+            { id: 43, type: "true-false", section: "stylistics", question: "Ці з'яўляецца правільным пераклад рускага 'в течение часа' як 'у цячэнне гадзіны'?", original: "Гэта адбудзецца у цячэнне гадзіны.", answer: "Няверна", explanation: "Правільны пераклад: 'на працягу гадзіны'.", rule: "Слоўнік цяжкасцей перакладу", difficulty: "Высокая" },
+            { id: 44, type: "matching", section: "stylistics", question: "Суаднясіце стыль з яго характэрнай рысай:", items: [{ left: "Навуковы", right: "Тэрміналагічнасць, дакладнасць" }, { left: "Мастацкі", right: "Вобразнасць, эмацыянальнасць" }], answer: "Навуковы - Тэрміналагічнасць; Мастацкі - Вобразнасць", explanation: "Кожны функцыянальны стыль мае свае ўласцівыя рысы.", rule: "Стылістыка", difficulty: "Нізкая" },
+            { id: 45, type: "fill-gap", section: "stylistics", question: "Упішыце правільны прыназоўнік для перакладу 'в связи с':", original: "___ з надвор'ем мы адмяняем экскурсію.", answer: "У сувязі", explanation: "Устойлівае спалучэнне 'у сувязі з' з'яўляецца адзіным правільным варыянтам.", rule: "Закон РБ № 420-З, § 39", difficulty: "Сярэдняя" },
+            { id: 46, type: "classify", section: "mixed", question: "Да якога раздзела мовазнаўства адносіцца памылка ў сказе?", original: "Самыя навейшыя фільмы сёння паказывалі ў нашым кінатэатры.", options: ["Марфалогія", "Лексіка", "Стылістыка"], answer: "Марфалогія", explanation: "Самыя новыя фільмы сёння паказвалі ў нашым кінатэатры", rule: "Ступені параўнання прыметнікаў, правапіс дзеясловаў", difficulty: "Сярэдняя" },
+            { id: 47, type: "find-fix", section: "mixed", question: "Знайдзіце і выпраўце ўсе памылкі ў сказе:", original: "Васіль харашо ведал с кем можна пагаварыть.", answer: "Васіль добра ведаў, з кім можна пагаварыць", explanation: "1. ' ", rule: "Закон РБ № 420-З, § 4, § 15", difficulty: "Высокая" },
+            { id: 48, type: "single-choice", section: "mixed", question: "Абярыце цалкам правільны варыянт сказа:", original: "Вызначце правільны сказ:", options: ["Бацькі пайшлі ў лес па грыбы.", "Батькі пайшлі у лес па грыбы.", "Бацькі пайшлі ў лес за грыбамі."], answer: "Бацькі пайшлі ў лес па грыбы", explanation: "", rule: "Закон РБ № 420-З, § 15, § 38", difficulty: "Сярэдняя" },
+            { id: 49, type: "true-false", section: "mixed", question: "Ці з'яўляецца правільным выкарыстанне слова 'данныя' ў навуковым тэксце на беларускай мове?", original: "Аналізуючы данныя, мы прыйшлі да высновы.", answer: "Няверна", explanation: "Правільна: 'даныя'.", rule: "Правапіс -н-/-нн-", difficulty: "Сярэдняя" },
+            { id: 50, type: "ordering", section: "mixed", question: "Аднавіце правільны парадак слоў у сказе:", items: [{ text: "ў вёску" }, { text: "па-старэчы" }, { text: "паплёўся" } , { text: "нагамі" }, { text: "Ён" } , { text: "перабіраючы" }], answer: "Ён, па-старэчы перабіраючы нагамі, паплёўся ў вёску", explanation: " ", rule: "Сінтаксіс простага сказа", difficulty: "Сярэдняя" }
+        ];
+
+        /* ===== 3. ФУНКЦЫІ КІРАВАННЯ ДАНЫМІ ===== */
+        function getTasks() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) return JSON.parse(stored);
+            return DEFAULT_TASKS;
+        }
+
+        function saveTasks(tasks) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        }
+
+        function getNextId(tasks) {
+            return tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
+        }
+
+        /* ===== 4. ПРАКРУТКА Ў САМЫ ВЕРХ ===== */
+        function scrollToTop(event) {
+            if (event) event.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        /* ===== 5. ПРАКРУТКА ДА ПАНЭЛІ АДМІНІСТРАТАРА ===== */
+        function scrollToAdminPanel() {
+            const adminSection = document.getElementById('section-admin');
+            if (adminSection) {
+                const y = adminSection.getBoundingClientRect().top + window.pageYOffset - 100;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+        }
+
+        /* ===== 6. РЭНДЭРЫНГ ІНТЭРФЕЙСУ ===== */
+        function renderApp() {
+            const tasks = getTasks();
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = '';
+
+            const sections = {
+                orthography: { title: "1. Арфаграфія", emoji: "🔤", intro: "Правільнае напісанне галосных і зычных." },
+                morphology: { title: "2. Марфалогія", emoji: "🔡", intro: "Марфалагічныя прыметы і разбор часцін мовы." },
+                syntax: { title: "3. Сінтаксіс і пунктуацыя", emoji: "📝", intro: "Будова сказа і знакі прыпынку." },
+                lexics: { title: "4. Лексіка", emoji: "📖", intro: "Значэнне слоў, сінонімы, антонімы, паронімы." },
+                phonetics: { title: "5. Фанетыка", emoji: "🔊", intro: "Гукі, транскрыпцыя, фанетычныя працэсы." },
+                phraseology: { title: "6. Фразеалогія", emoji: "🎭", intro: "Устойлівыя выразы і іх ужыванне." },
+                morphemics: { title: "7. Марфеміка", emoji: "🧩", intro: "Будова слова: корань, прыстаўка, суфікс, канчатак." },
+                "word-formation": { title: "8. Словаўтварэнне", emoji: "🏗️", intro: "Спосабы ўтварэння новых слоў." },
+                stylistics: { title: "9. Стылістыка і пераклад", emoji: "🎨", intro: "Стылі маўлення і правільны пераклад канструкцый." },
+                mixed: { title: "10. Змешаны верыфікатар", emoji: "🎯", intro: "Кjмплексныя заданні на ўсе правілы." }
+            };
+
+            for (const [key, sec] of Object.entries(sections)) {
+                const sectionTasks = tasks.filter(t => t.section === key);
+                if (sectionTasks.length === 0) continue;
+
+                const sectionEl = document.createElement('section');
+                sectionEl.className = 'section';
+                sectionEl.id = `section-${key}`;
+                
+                sectionEl.innerHTML = `
+                    <div class="section-header">${sec.emoji} ${sec.title}</div>
+                    <p class="section-intro">${sec.intro}</p>
+                    <div id="tasks-${key}"></div>
+                `;
+
+                const tasksContainer = sectionEl.querySelector(`#tasks-${key}`);
+                sectionTasks.forEach(task => {
+                    tasksContainer.appendChild(createTaskCard(task));
+                });
+
+                const backLink = document.createElement('a');
+                backLink.href = '#top';
+                backLink.className = 'back-to-top';
+                backLink.innerHTML = '⬆️ Вярнуцца ў змест';
+                sectionEl.appendChild(backLink);
+
+                mainContent.appendChild(sectionEl);
+            }
+
+            mainContent.appendChild(renderAdminPanel());
+            
+            // Аднаўляем стан адміністратара пасля перастройкі
+            restoreAdminState();
+        }
+
+        function createTaskCard(task) {
+            const card = document.createElement('div');
+            card.className = 'task-card';
+            card.dataset.id = task.id;
+
+            const typeLabels = {
+                'fill-gap': 'Запаўненне пропуску',
+                'single-choice': 'Адзінкавы выбар',
+                'true-false': 'Верна / Няверна',
+                'matching': 'Суаднясенне',
+                'classify': 'Класіфікуй памылку',
+                'ordering': 'Парадкаванне',
+                'find-fix': 'Знайдзі і выпраў'
+            };
+
+            let inputHtml = '';
+            
+            if (task.type === 'fill-gap' || task.type === 'find-fix') {
+                inputHtml = `<input type="text" class="task-input" placeholder="Увядзіце правільны адказ..." data-type="text">`;
+            } else if (task.type === 'single-choice' || task.type === 'classify' || task.type === 'true-false') {
+                inputHtml = `<div class="options-group">`;
+                const options = task.type === 'true-false' ? ['Верна', 'Няверна'] : task.options;
+                options.forEach((opt) => {
+                    inputHtml += `
+                        <label class="option-label">
+                            <input type="radio" name="task-${task.id}" value="${opt}">
+                            <span>${opt}</span>
+                        </label>
+                    `;
+                });
+                inputHtml += `</div>`;
+            } else if (task.type === 'matching') {
+                inputHtml = `<div class="options-group">`;
+                task.items.forEach((item, idx) => {
+                    inputHtml += `
+                        <div style="display:flex; gap:1rem; align-items:center; margin-bottom:0.5rem;">
+                            <span style="flex:1; font-weight:600;">${item.left}</span>
+                            <select class="task-input" style="margin:0; flex:1;" data-match-idx="${idx}">
+                                <option value="">Выберыце адказ...</option>
+                                ${task.items.map(i => `<option value="${i.right}">${i.right}</option>`).join('')}
+                            </select>
+                        </div>
+                    `;
+                });
+                inputHtml += `</div>`;
+            } else if (task.type === 'ordering') {
+                inputHtml = `<ul class="sortable-list" id="sort-${task.id}">`;
+                const shuffled = [...task.items].sort(() => Math.random() - 0.5);
+                shuffled.forEach((item) => {
+                    inputHtml += `
+                        <li class="sortable-item" data-text="${item.text}">
+                            <span>${item.text}</span>
+                            <div style="display:flex; gap:0.3rem;">
+                                <button class="btn btn-up" onclick="moveItem(this, -1)">↑</button>
+                                <button class="btn btn-down" onclick="moveItem(this, 1)">↓</button>
+                            </div>
+                        </li>
+                    `;
+                });
+                inputHtml += `</ul>`;
+            }
+
+            card.innerHTML = `
+                <div class="task-type-badge">${typeLabels[task.type] || task.type}</div>
+                <div class="task-question">${task.question}</div>
+                ${task.original ? `<div class="task-original">«${task.original}»</div>` : ''}
+                ${inputHtml}
+                <div class="btn-group">
+                    <button class="btn btn-check" onclick="checkTask(${task.id})">✅ Праверыць</button>
+                    <button class="btn btn-reset" onclick="resetTask(${task.id})">🔄 Скінуць</button>
+                    <button class="btn btn-show" onclick="showAnswer(${task.id})">👁️ Паказаць адказ</button>
+                </div>
+                <div class="feedback" id="feedback-${task.id}"></div>
+            `;
+
+            return card;
+        }
+
+        /* ===== 7. ЛОГІКА ПРАВЕРКІ ===== */
+        function checkTask(taskId) {
+            const tasks = getTasks();
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            const feedbackEl = document.getElementById(`feedback-${taskId}`);
+            let isCorrect = false;
+
+            if (task.type === 'fill-gap' || task.type === 'find-fix') {
+                const input = document.querySelector(`#section-${task.section} .task-card[data-id="${taskId}"] .task-input`);
+                const userAnswer = input.value.trim().toLowerCase();
+                const correctAnswers = task.answer.toLowerCase().split('|').map(a => a.trim());
+                isCorrect = correctAnswers.includes(userAnswer);
+            } 
+            else if (task.type === 'single-choice' || task.type === 'classify' || task.type === 'true-false') {
+                const selected = document.querySelector(`input[name="task-${taskId}"]:checked`);
+                if (selected) isCorrect = selected.value === task.answer;
+            }
+            else if (task.type === 'matching') {
+                const selects = document.querySelectorAll(`#section-${task.section} .task-card[data-id="${taskId}"] select`);
+                let allCorrect = true;
+                selects.forEach((sel, idx) => {
+                    if (sel.value !== task.items[idx].right) allCorrect = false;
+                });
+                isCorrect = allCorrect;
+            }
+            else if (task.type === 'ordering') {
+                const list = document.getElementById(`sort-${taskId}`);
+                const items = list.querySelectorAll('.sortable-item');
+                const userOrder = Array.from(items).map(item => item.dataset.text).join(', ');
+                isCorrect = userOrder === task.answer;
+            }
+
+            if (isCorrect) {
+                feedbackEl.className = 'feedback correct';
+                feedbackEl.innerHTML = `<strong>✅ Правільна!</strong><br>${task.explanation}<br><span class="rule-link">📜 ${task.rule}</span>`;
+            } else {
+                feedbackEl.className = 'feedback incorrect';
+                feedbackEl.innerHTML = `<strong>❌ Няправільна.</strong><br>Паспрабуйце яшчэ раз або націсніце "Паказаць адказ".`;
+            }
+        }
+
+        function resetTask(taskId) {
+            const card = document.querySelector(`.task-card[data-id="${taskId}"]`);
+            if (!card) return;
+            const inputs = card.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                if (input.type === 'radio') input.checked = false;
+                else input.value = '';
+            });
+            const feedbackEl = document.getElementById(`feedback-${taskId}`);
+            feedbackEl.className = 'feedback';
+            feedbackEl.innerHTML = '';
+        }
+
+        function showAnswer(taskId) {
+            const tasks = getTasks();
+            const task = tasks.find(t => t.id === taskId);
+            const feedbackEl = document.getElementById(`feedback-${taskId}`);
+            feedbackEl.className = 'feedback correct';
+            feedbackEl.innerHTML = `<strong>💡 Правільны адказ:</strong> ${task.answer}<br><br>${task.explanation}<br><span class="rule-link">📜 ${task.rule}</span>`;
+        }
+
+        function moveItem(btn, direction) {
+            const item = btn.closest('.sortable-item');
+            const list = item.parentNode;
+            if (direction === -1 && item.previousElementSibling) {
+                list.insertBefore(item, item.previousElementSibling);
+            } else if (direction === 1 && item.nextElementSibling) {
+                list.insertBefore(item.nextElementSibling, item);
+            }
+        }
+
+        /* ===== 8. ПАНЭЛЬ АДМІНІСТРАТАРА ===== */
+        function renderAdminPanel() {
+            const section = document.createElement('section');
+            section.className = 'section';
+            section.id = 'section-admin';
+            section.innerHTML = `
+                <div class="section-header">⚙️ Панэль адміністратара</div>
+                <div class="admin-panel">
+                    <div id="admin-login" class="admin-login ${adminState.isLoggedIn ? 'hidden' : ''}">
+                        <p>Увядзіце пароль для доступу да кіравання заданнямі:</p>
+                        <input type="password" id="admin-pass" placeholder="Пароль">
+                        <button class="btn btn-check" id="admin-login-btn">🔐 Увайсці</button>
+                        <p id="login-error" style="color:#f56565; margin-top:1rem; display:none;">Няправільны пароль!</p>
+                    </div>
+                    
+                    <div id="admin-interface" class="admin-interface" ${adminState.isLoggedIn ? 'style="display:block;"' : ''}>
+                        <div class="admin-form">
+                            <h3 style="margin-bottom:1rem;">➕ Дадаць/Рэдагаваць заданне</h3>
+                            <input type="hidden" id="edit-task-id" value="${adminState.editingTaskId || ''}">
+                            <label>Раздзел</label>
+                            <select id="new-section">
+                                <option value="orthography">Арфаграфія</option>
+                                <option value="morphology">Марфалогія</option>
+                                <option value="syntax">Сінтаксіс і пунктуацыя</option>
+                                <option value="lexics">Лексіка</option>
+                                <option value="phonetics">Фанетыка</option>
+                                <option value="phraseology">Фразеалогія</option>
+                                <option value="morphemics">Марфеміка</option>
+                                <option value="word-formation">Словаўтварэнне</option>
+                                <option value="stylistics">Стылістыка і пераклад</option>
+                                <option value="mixed">Змешаны</option>
+                            </select>
+                            
+                            <label>Тып задання</label>
+                            <select id="new-type">
+                                <option value="fill-gap">Запаўненне пропуску</option>
+                                <option value="single-choice">Адзінкавы выбар</option>
+                                <option value="true-false">Верна / Няверна</option>
+                                <option value="matching">Суаднясенне</option>
+                                <option value="classify">Класіфікуй памылку</option>
+                                <option value="ordering">Размяркуй па парадку</option>
+                                <option value="find-fix">Знайдзі і выпраў</option>
+                            </select>
+
+                            <label>Зыходны тэкст з памылкай (калі ёсць)</label>
+                            <input type="text" id="new-original" placeholder="Напрыклад: На сённяшні дзень...">
+
+                            <label>Пытанне / Заданне</label>
+                            <input type="text" id="new-question" placeholder="Што трэба зрабіць?">
+
+                            <label>Правільны адказ</label>
+                            <input type="text" id="new-answer" placeholder="Правільны варыянт">
+
+                            <label>Тлумачэнне</label>
+                            <textarea id="new-explanation" rows="3" placeholder="Чаму так?"></textarea>
+
+                            <label>Спасылка на правіла</label>
+                            <input type="text" id="new-rule" placeholder="Закон РБ № 420-З, § 15" value="Закон РБ № 420-З">
+
+                            <label>Складанасць</label>
+                            <div style="display:flex; gap:1rem; margin-bottom:1rem; color:white;">
+                                <label><input type="radio" name="difficulty" value="Нізкая" checked> Нізкая</label>
+                                <label><input type="radio" name="difficulty" value="Сярэдняя"> Сярэдняя</label>
+                                <label><input type="radio" name="difficulty" value="Высокая"> Высокая</label>
+                            </div>
+
+                            <button class="btn btn-check" id="save-task-btn">💾 Захаваць заданне</button>
+                            <button class="btn btn-reset" id="clear-form-btn" style="margin-left:0.5rem;">🔄 Ачысціць форму</button>
+                        </div>
+
+                        <div style="margin-bottom:1rem;">
+                            <button class="btn btn-export" id="export-btn">📤 Экспартаваць у JSON</button>
+                            <button class="btn btn-import" id="import-btn-trigger">📥 Імпартаваць з JSON</button>
+                            <input type="file" id="import-file" class="hidden" accept=".json">
+                            <button class="btn btn-delete" id="reset-default-btn" style="margin-left:1rem;">🗑️ Скід да стандартных</button>
+                        </div>
+
+                        <h3 style="margin-bottom:1rem;">Спіс заданняў</h3>
+                        <div id="admin-task-list" class="admin-task-list"></div>
+
+                        <button class="btn btn-reset" id="logout-btn" style="margin-top:2rem; width:100%;">🚪 Выйсці</button>
+                    </div>
+                </div>
+            `;
+            return section;
+        }
+
+        /* ===== 9. АДНАЎЛЕННЕ СТАНУ АДМІНІСТРАТАРА ===== */
+        function restoreAdminState() {
+            if (!adminState.isLoggedIn) return;
+            
+            // Калі рэдагуецца заданне — запаўняем форму
+            if (adminState.editingTaskId) {
+                const tasks = getTasks();
+                const task = tasks.find(t => t.id === adminState.editingTaskId);
+                if (task) {
+                    fillEditForm(task);
+                    // Падсвятляем заданне ў спісе
+                    highlightEditingTask(adminState.editingTaskId);
+                }
+            }
+            
+            // Прызначаем апрацоўшчыкі падзей для кнопак
+            setupAdminEvents();
+        }
+
+        function fillEditForm(task) {
+            document.getElementById('edit-task-id').value = task.id;
+            document.getElementById('new-section').value = task.section;
+            document.getElementById('new-type').value = task.type;
+            document.getElementById('new-original').value = task.original || '';
+            document.getElementById('new-question').value = task.question;
+            document.getElementById('new-answer').value = task.answer;
+            document.getElementById('new-explanation').value = task.explanation;
+            document.getElementById('new-rule').value = task.rule;
+            
+            const diffRadios = document.getElementsByName('difficulty');
+            for (let radio of diffRadios) {
+                if (radio.value === task.difficulty) radio.checked = true;
+            }
+        }
+
+        function highlightEditingTask(taskId) {
+            const items = document.querySelectorAll('.admin-task-item');
+            items.forEach(item => item.classList.remove('editing'));
+            const target = document.querySelector(`.admin-task-item[data-task-id="${taskId}"]`);
+            if (target) {
+                target.classList.add('editing');
+            }
+        }
+
+        /* ===== 10. АПРАЦОЎНІКІ ПАДЗЕЙ АДМІНІСТРАТАРА ===== */
+        function setupAdminEvents() {
+            const loginBtn = document.getElementById('admin-login-btn');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', () => {
+                    const pass = document.getElementById('admin-pass').value;
+                    if (pass === ADMIN_PASSWORD) {
+                        adminState.isLoggedIn = true;
+                        document.getElementById('admin-login').classList.add('hidden');
+                        document.getElementById('admin-interface').style.display = 'block';
+                        renderAdminTaskList();
+                    } else {
+                        document.getElementById('login-error').style.display = 'block';
+                    }
+                });
+            }
+
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    adminState.isLoggedIn = false;
+                    adminState.editingTaskId = null;
+                    document.getElementById('admin-login').classList.remove('hidden');
+                    document.getElementById('admin-interface').style.display = 'none';
+                    document.getElementById('admin-pass').value = '';
+                    document.getElementById('login-error').style.display = 'none';
+                });
+            }
+
+            const saveBtn = document.getElementById('save-task-btn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', () => {
+                    const tasks = getTasks();
+                    const editId = document.getElementById('edit-task-id').value;
+                    
+                    const newTask = {
+                        id: editId ? parseInt(editId) : getNextId(tasks),
+                        section: document.getElementById('new-section').value,
+                        type: document.getElementById('new-type').value,
+                        original: document.getElementById('new-original').value,
+                        question: document.getElementById('new-question').value,
+                        answer: document.getElementById('new-answer').value,
+                        explanation: document.getElementById('new-explanation').value,
+                        rule: document.getElementById('new-rule').value,
+                        difficulty: document.querySelector('input[name="difficulty"]:checked').value
+                    };
+
+                    if (editId) {
+                        const idx = tasks.findIndex(t => t.id === parseInt(editId));
+                        if (idx !== -1) {
+                            if (tasks[idx].options) newTask.options = tasks[idx].options;
+                            if (tasks[idx].items) newTask.items = tasks[idx].items;
+                            tasks[idx] = newTask;
+                        }
+                    } else {
+                        tasks.push(newTask);
+                    }
+
+                    saveTasks(tasks);
+                    adminState.editingTaskId = null;
+                    clearForm();
+                    renderAdminTaskList();
+                    renderApp();
+                    // ЗАСТАЁМСЯ Ў ПАНЭЛІ АДМІНІСТРАТАРА
+                    setTimeout(scrollToAdminPanel, 100);
+                    alert('Заданне захавана!');
+                });
+            }
+
+            const clearBtn = document.getElementById('clear-form-btn');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    adminState.editingTaskId = null;
+                    clearForm();
+                    // Здымаем падсветку з усіх заданняў
+                    document.querySelectorAll('.admin-task-item').forEach(item => item.classList.remove('editing'));
+                });
+            }
+
+            const exportBtn = document.getElementById('export-btn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', () => {
+                    const tasks = getTasks();
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(tasks, null, 2));
+                    const downloadAnchorNode = document.createElement('a');
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute("download", "praver_shi_tasks.json");
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                });
+            }
+
+            const importBtn = document.getElementById('import-btn-trigger');
+            if (importBtn) {
+                importBtn.addEventListener('click', () => {
+                    document.getElementById('import-file').click();
+                });
+            }
+
+            const importFile = document.getElementById('import-file');
+            if (importFile) {
+                importFile.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        try {
+                            const imported = JSON.parse(event.target.result);
+                            if (Array.isArray(imported)) {
+                                saveTasks(imported);
+                                renderAdminTaskList();
+                                renderApp();
+                                setTimeout(scrollToAdminPanel, 100);
+                                alert('Заданні паспяхова імпартаваны!');
+                            } else {
+                                alert('Няправільны фармат файла!');
+                            }
+                        } catch (err) {
+                            alert('Памылка чытання файла!');
+                        }
+                    };
+                    reader.readAsText(file);
+                    e.target.value = '';
+                });
+            }
+
+            const resetBtn = document.getElementById('reset-default-btn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    if (confirm('Гэта выдаліць усе вашы змены і верне стандартныя заданні. Працягнуць?')) {
+                        localStorage.removeItem(STORAGE_KEY);
+                        adminState.editingTaskId = null;
+                        renderAdminTaskList();
+                        renderApp();
+                        setTimeout(scrollToAdminPanel, 100);
+                        alert('Скінута да стандартных налад!');
+                    }
+                });
+            }
+        }
+
+        function renderAdminTaskList() {
+            const tasks = getTasks();
+            const list = document.getElementById('admin-task-list');
+            if (!list) return;
+            list.innerHTML = '';
+            
+            tasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = 'admin-task-item';
+                item.dataset.taskId = task.id;
+                // Калі гэта заданне зараз рэдагуецца — падсвятляем яго
+                if (adminState.editingTaskId === task.id) {
+                    item.classList.add('editing');
+                }
+                item.innerHTML = `
+                    <div class="admin-task-info">
+                        <strong>[${task.section}]</strong> ${task.question.substring(0, 60)}... 
+                        <span style="color:#cbd5e0; font-size:0.8rem;">(${task.difficulty})</span>
+                    </div>
+                    <div class="admin-actions">
+                        <button class="btn-admin btn-edit" data-id="${task.id}">✏️</button>
+                        <button class="btn-admin btn-delete" data-id="${task.id}">🗑️</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+
+            list.querySelectorAll('.btn-edit').forEach(btn => {
+                btn.addEventListener('click', () => editTask(parseInt(btn.dataset.id)));
+            });
+            list.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', () => deleteTask(parseInt(btn.dataset.id)));
+            });
+        }
+
+        /* ===== 11. РЭДАГАВАННЕ ЗАДАННЯ (БЕЗ ПРАКРУТКІ ЎВЕРХ!) ===== */
+        function editTask(id) {
+            const tasks = getTasks();
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            // Захоўваем ID задання, якое рэдагуецца
+            adminState.editingTaskId = id;
+            
+            // Запаўняем форму
+            fillEditForm(task);
+            
+            // Падсвятляем заданне ў спісе
+            highlightEditingTask(id);
+            
+            // Пракручваем да формы рэдагавання (у межах панэлі адміністратара)
+            const adminForm = document.querySelector('.admin-form');
+            if (adminForm) {
+                const y = adminForm.getBoundingClientRect().top + window.pageYOffset - 100;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+        }
+
+        function deleteTask(id) {
+            if (!confirm('Вы ўпэўнены, што хочаце выдаліць гэтае заданне?')) return;
+            let tasks = getTasks();
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasks(tasks);
+            
+            // Калі выдаляем заданне, якое рэдагавалася — ачышчаем форму
+            if (adminState.editingTaskId === id) {
+                adminState.editingTaskId = null;
+                clearForm();
+            }
+            
+            renderAdminTaskList();
+            renderApp();
+            // ЗАСТАЁМСЯ Ў ПАНЭЛІ АДМІНІСТРАТАРА
+            setTimeout(scrollToAdminPanel, 100);
+        }
+
+        function clearForm() {
+            const editIdField = document.getElementById('edit-task-id');
+            if (editIdField) editIdField.value = '';
+            const originalField = document.getElementById('new-original');
+            if (originalField) originalField.value = '';
+            const questionField = document.getElementById('new-question');
+            if (questionField) questionField.value = '';
+            const answerField = document.getElementById('new-answer');
+            if (answerField) answerField.value = '';
+            const explanationField = document.getElementById('new-explanation');
+            if (explanationField) explanationField.value = '';
+            const ruleField = document.getElementById('new-rule');
+            if (ruleField) ruleField.value = 'Закон РБ № 420-З';
+            const diffRadio = document.querySelector('input[name="difficulty"][value="Нізкая"]');
+            if (diffRadio) diffRadio.checked = true;
+        }
+
+        /* ===== 12. ІНІЦЫЯЛІЗАЦЫЯ ===== */
+        document.addEventListener('DOMContentLoaded', () => {
+            renderApp();
+            setupAdminEvents();
+        });
+    </script>
+</body>
+</html>
